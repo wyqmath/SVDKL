@@ -1,4 +1,4 @@
-# SVDKL: Deep kernel learning for tomato metabolite prediction
+# Deep kernel learning predicts complex traits and prioritizes candidate loci from pangenome structural variation in tomato
 
 SVDKL predicts tomato metabolite levels from genomic structural variants. It combines a relationship kernel across deletion variants with a Transformer-weighted kernel built from 500 variants selected within the training data. Gaussian process regression brings together genome-wide similarity and trait-associated signals. This repository provides data preparation, model training, pretrained prediction and evaluation for 36 metabolite traits. Three model sizes are available, and the Colab notebook guides you through preparing inputs and making predictions.
 
