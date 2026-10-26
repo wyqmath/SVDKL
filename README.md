@@ -4,8 +4,6 @@ SVDKL predicts tomato metabolite levels from genomic structural variants. It com
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wyqmath/SVDKL/blob/main/notebooks/SVDKL_quickstart.ipynb)
 
-Choose a model size, load its weight ZIP, and provide the source data or a reference NPZ built with `src.prepare_data`. Run the cells in order to produce a prediction CSV. Training and evaluation have separate controls.
-
 ![SVDKL framework](assets/fig1.jpg)
 
 ## Repository structure
@@ -34,7 +32,7 @@ python -m pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/
 python -m pip install numpy==2.3.5 scipy==1.17.1 threadpoolctl==3.6.0
 ```
 
-These commands install CPU PyTorch for prediction. For GPU training, install the CUDA build with `--index-url https://download.pytorch.org/whl/cu128` instead. The training records identify Python 3.12.3, PyTorch 2.8.0/CUDA 12.8, NumPy 2.3.5, SciPy 1.17.1 and threadpoolctl 3.6.0 on an RTX 5090. Colab uses its installed PyTorch/CUDA build and displays the active versions.
+Use Python 3.12. The commands above install CPU PyTorch for prediction. For GPU training, use `--index-url https://download.pytorch.org/whl/cu128` for the PyTorch installation instead. Colab uses its preinstalled PyTorch/CUDA environment.
 
 ## Prepare the data
 
