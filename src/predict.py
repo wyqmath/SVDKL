@@ -72,10 +72,10 @@ def predict_values(state, raw_qc):
     return prediction
 
 
-def predict_checkpoint(checkpoint, raw, marker_ids, catalog=None):
+def predict_checkpoint(checkpoint, raw, marker_ids, catalog=None, reference_data=None, model_id=None, trait=None):
     if Path(checkpoint).suffix.lower() in {'.pt', '.pth'}:
-        from .model import load_full_checkpoint
-        net, transform, _, _ = load_full_checkpoint(checkpoint, marker_catalog=catalog)
+        net, transform, _, _ = load_prediction_model(
+            checkpoint, reference_data, catalog=catalog, model_id=model_id, trait=trait)
         return predict_full_values(net, transform, raw, marker_ids)
     state = load_checkpoint(checkpoint)
     order = marker_catalog(state, checkpoint, catalog)
@@ -114,6 +114,25 @@ def predict_full_values(net, transform, raw, marker_ids):
     return prediction
 
 
+def load_prediction_model(checkpoint, data, device='cpu', catalog=None, model_id=None, trait=None):
+    import torch
+    from .model import load_full_checkpoint, load_parameter_checkpoint
+
+    saved = torch.load(checkpoint, map_location='meta', weights_only=True)
+    if isinstance(saved, dict) and 'format' in saved:
+        return load_full_checkpoint(checkpoint, device=device, marker_catalog=catalog)
+    if data is None:
+        raise ValueError('Parameter-only weights require the fixed reference data')
+    path = Path(checkpoint)
+    model_id = model_id or path.parent.name
+    trait = trait or path.stem
+    if path.stem.startswith('SlFM') and path.stem != trait:
+        raise ValueError('Trait argument differs from the parameter filename')
+    if path.parent.name.startswith('SVDKL-') and path.parent.name != model_id:
+        raise ValueError('Model argument differs from the parameter directory')
+    return load_parameter_checkpoint(checkpoint, data, model_id, trait, device=device)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Predict phenotypes from a saved SVDKL state.')
     parser.add_argument("--checkpoint", type=Path, required=True)
@@ -121,6 +140,10 @@ def main():
     parser.add_argument("--marker-catalog", type=Path)
     parser.add_argument("--output", type=Path, default=Path("predictions.csv"))
     parser.add_argument("--device", default="cpu", help="Device for a full .pt checkpoint; compact .npz uses CPU")
+    parser.add_argument("--model", help="Model ID for parameter-only .pt weights; inferred from their directory")
+    parser.add_argument("--trait", help="Trait ID for parameter-only .pt weights; inferred from their filename")
+    parser.add_argument("--reference-data", type=Path,
+                        help="Complete fixed reference NPZ for parameter-only weights and custom query inputs")
     parser.add_argument("--attention-output", type=Path,
                         help="Optional .npz of all layer/head attention maps; requires a full .pt checkpoint")
     args = parser.parse_args()
@@ -139,9 +162,9 @@ def main():
         raise ValueError("Each genotype row requires one unique accession")
     with threadpool_limits(limits=1):
         if args.checkpoint.suffix.lower() in {'.pt', '.pth'}:
-            from .model import load_full_checkpoint
-            net, transform, payload, _ = load_full_checkpoint(
-                args.checkpoint, device=args.device, marker_catalog=args.marker_catalog)
+            net, transform, payload, _ = load_prediction_model(
+                args.checkpoint, args.reference_data or args.data, device=args.device,
+                catalog=args.marker_catalog, model_id=args.model, trait=args.trait)
             prediction = predict_full_values(net, transform, raw, marker_ids)
             if args.attention_output:
                 attention = net.transformer.attention_maps(net.tokens).cpu().numpy()

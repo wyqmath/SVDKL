@@ -405,6 +405,53 @@ def load_full_checkpoint(path, device='cpu', restore_optimizer=False, marker_cat
         optimizer.load_state_dict(payload['optimizer_state_dict'])
     return net, transform, payload, optimizer
 
+
+def load_parameter_checkpoint(path, reference_data, model_id, trait, device='cpu'):
+    from .train import get_benchmark, validate_plan
+
+    plan = get_benchmark()
+    model_config, training_config = validate_plan(plan, model_id)
+    if trait not in plan['traits']:
+        raise ValueError('Choose a trait from the fixed 36-trait panel')
+    if isinstance(reference_data, dict):
+        arrays = reference_data
+    else:
+        with np.load(reference_data, allow_pickle=False) as saved:
+            arrays = {key: saved[key] for key in saved.files}
+    required = {'dosage', 'accessions', 'traits', 'phenotypes', 'marker_id', 'chrom', 'pos', 'svlen'}
+    if not required <= set(arrays):
+        raise ValueError('Parameter-only weights require the complete reference input; use --reference-data for custom queries')
+    if (arrays['accessions'].tolist() != plan['accessions']
+            or arrays['traits'].tolist() != plan['traits']
+            or arrays['dosage'].shape != (324, 106362)
+            or arrays['phenotypes'].shape != (324, 36)):
+        raise ValueError('Reference data must match the fixed 324-accession, 36-trait benchmark')
+    parameters = torch.load(path, map_location='cpu', weights_only=True)
+    _check_inference_parameters(parameters, model_config, training_config)
+    metadata = {key: arrays[key] for key in ('marker_id', 'chrom', 'pos', 'svlen')}
+    if 'svtype' in arrays:
+        metadata['svtype'] = arrays['svtype']
+    fold = plan['fold_partitions'][0]
+    train = fold['train']
+    column = plan['traits'].index(trait)
+    transform = TrainOnlyTransform().fit(arrays['dosage'][train], arrays['phenotypes'][train, column], metadata)
+    configuration = dict(training_config, width=model_config['width'], depth=model_config['depth'])
+    with torch.random.fork_rng(devices=[]):
+        net = SVDKL(transform, configuration)
+    with torch.no_grad():
+        for name, value in net.named_parameters():
+            value.copy_(parameters[name])
+        net.to(device).eval()
+        net.K_base_tt.copy_(net.lib_base @ net.lib_base.T / net.p_base)
+        net.kb_ready.fill_(1)
+        net.freeze()
+    payload = {'format': 'svdkl.parameters', 'model_config': model_config,
+               'case': {'model': model_id, 'trait': trait, 'fold': fold['fold'],
+                        'training_seed': fold['training_seed'],
+                        'train_ids': [plan['accessions'][i] for i in train],
+                        'held_ids': [plan['accessions'][i] for i in fold['held']]}}
+    return net, transform, payload, None
+
 # Public inference files retain every learned parameter and the fitted GP predictor.
 INFERENCE_CHECKPOINT_FORMAT = 'svdkl.inference_network.v2'
 _INFERENCE_PREPROCESS = ('marker_cols', 'imputation_mean', 'b_keep', 'b_mu', 'b_sd',

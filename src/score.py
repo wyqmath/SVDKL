@@ -6,7 +6,7 @@ import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from threadpoolctl import threadpool_limits
 
-from .model import load_full_checkpoint
+from .model import load_full_checkpoint, load_parameter_checkpoint
 from .predict import predict_full_values
 from .train import get_benchmark, input_snapshot_path, validate_plan
 
@@ -64,9 +64,59 @@ def find_record(root, model_id, fold, trait):
     return occupied[0]
 
 
+def parameter_files(root, model_id, traits):
+    root = Path(root)
+    folders = dict.fromkeys((root / model_id, root, root / 'weights' / model_id))
+    occupied = [folder for folder in folders if any((folder / (trait + '.pt')).exists() for trait in traits)]
+    if not occupied:
+        return None
+    if len(occupied) != 1:
+        raise ValueError(f'Multiple parameter directories found for {model_id}')
+    files = [occupied[0] / (trait + '.pt') for trait in traits]
+    missing = [path.name for path in files if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f'Missing parameter files for {model_id}: {missing}')
+    return files
+
+
+def score_parameters(arrays, plan, selected_models, checkpoints):
+    if (arrays['accessions'].tolist() != plan['accessions']
+            or arrays['traits'].tolist() != plan['traits']):
+        raise ValueError('Input identities must match the fixed reference dataset')
+    fold = plan['fold_partitions'][0]
+    train, held = fold['train'], fold['held']
+    cases, summary = [], []
+    for model, paths in zip(selected_models, checkpoints):
+        validate_plan(plan, model['id'])
+        trait_cases = []
+        for column, (trait, path) in enumerate(zip(plan['traits'], paths)):
+            net, transform, _, _ = load_parameter_checkpoint(path, arrays, model['id'], trait)
+            prediction = predict_full_values(net, transform, arrays['dosage'][held], arrays['marker_id'])
+            sd = transform.sd
+            del net, transform
+            row = {'model': model['id'], 'trait': trait, 'fold': fold['fold'],
+                   'n_train': len(train), 'n_test': len(held), 'train_sd_ddof1': sd,
+                   'prediction_source': 'parameters_with_reconstructed_training_context',
+                   **metrics(arrays['phenotypes'][held, column], prediction, sd)}
+            trait_cases.append(row)
+            cases.append(row)
+        summary.append({'model': model['id'], 'parameters': model['parameters'],
+                        'fold': fold['fold'], 'traits': len(trait_cases),
+                        'mean': {key: float(np.mean([row[key] for row in trait_cases])) for key in METRICS}})
+        print(f"Scored {model['id']}: {len(trait_cases)} traits", flush=True)
+    return {'aggregation': plan['primary_aggregation'], 'uncertainty': plan['uncertainty'],
+            'fold': fold['fold'], 'training_seed': fold['training_seed'],
+            'prediction_source': 'parameter_checkpoints', 'rows': summary, 'per_trait': cases}
+
+
 def score_experiment(root, data_path, plan, selected_models):
     with np.load(data_path, allow_pickle=False) as z:
         arrays = {key: z[key] for key in z.files}
+    checkpoints = [parameter_files(root, model['id'], plan['traits']) for model in selected_models]
+    if any(paths is not None for paths in checkpoints):
+        if any(paths is None for paths in checkpoints):
+            raise ValueError('Select one model when mixing parameter-only and complete checkpoint archives')
+        return score_parameters(arrays, plan, selected_models, checkpoints)
     validate_input_snapshot(root, arrays)
     raw, labels = arrays['dosage'], arrays['phenotypes']
     ids, traits, marker_ids = arrays['accessions'].tolist(), arrays['traits'].tolist(), arrays['marker_id']
