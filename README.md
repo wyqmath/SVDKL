@@ -1,4 +1,4 @@
-# SVDKL for tomato metabolite prediction from structural variants
+# Deep kernel learning predicts complex traits and prioritizes candidate loci from pangenome structural variation in tomato
 
 SVDKL predicts tomato metabolite levels from genomic structural variant genotypes. This repository provides code to prepare data, train models, and generate predictions for 36 metabolite traits. Start with the Colab example to run prediction and save a prediction table and plot. Prediction runs on a CPU; GPU training is optional.
 
@@ -16,19 +16,19 @@ SVDKL predicts tomato metabolite levels from genomic structural variant genotype
 
 The results table includes training/test roles, observed values, predictions and residuals (prediction errors). The comparison plot and prediction metrics use the 65 test accessions. The plot labels the model, metabolite and test sample count, with Pearson correlation and RMSE alongside it. Download buttons appear immediately. If plotting fails, the CSV is preserved and **Retry figure** redraws it without running prediction again. Saved CSV results can also be redrawn in a new session after setup.
 
-Pretrained model weights are not yet available for download. The pretrained prediction example requires these files. For now, use a model already available in your session. Training and test evaluation are optional sections after the main prediction workflow. Preparation from the original source files is in the notebook’s optional data section; step 3 loads prepared input available in the session.
+Training and evaluation are optional. Step 3 loads prepared input from the session; **Prepare example data** creates it from the original sources.
 
 ![SVDKL framework](assets/fig1.jpg)
 
 ## Model sizes
 
-| Model size | Paper label | Width / layers | Parameters | Model download |
+| Model size | Paper label | Width / layers | Parameters | Archive |
 |---|---|---|---:|---|
-| SVDKL-0.01M | SVDKL-0.01M | 32 / 1 | 9,731 | Not yet public |
-| SVDKL-4.35M | SVDKL-4M | 512 / 2 | 4,347,395 | Not yet public |
-| SVDKL-46.46M | SVDKL-46M | 1,376 / 3 | 46,462,019 | Not yet public |
+| SVDKL-0.01M | SVDKL-0.01M | 32 / 1 | 9,731 | `SVDKL-0.01M.zip` |
+| SVDKL-4.35M | SVDKL-4M | 512 / 2 | 4,347,395 | `SVDKL-4.35M.zip` |
+| SVDKL-46.46M | SVDKL-46M | 1,376 / 3 | 46,462,019 | `SVDKL-46.46M.zip` |
 
-Pretrained model weights are not yet available for download. When they are published, Colab downloads, unpacks and loads the selected model automatically. A model already available in the session can be loaded under **Advanced**.
+Each ZIP contains 36 parameter-only `.pt` files at `weights/<model>/<trait>.pt`. Zenodo record **23669233** currently holds the three archives as a draft. Colab is configured to download them when the record is published. Until then, extract a local ZIP and load its model directory under **Advanced**.
 
 The Transformer is the neural component that learns variant weights. Width is its internal feature dimension; layers is the number of encoder blocks. Both determine model size. Each model size supports the same 36 metabolite traits, using a separately trained model for each trait.
 
@@ -123,7 +123,13 @@ python -m src.prepare_data --vcf data/706.sv.vcf.gz --phenotypes data/pheno_exp_
 
 ### 2. Load a model and predict
 
-Place the model for the selected model size and trait at `weights/<model size>/<trait ID>.pt`. For example, use `weights/SVDKL-0.01M/SlFM0030.pt` for SVDKL-0.01M and SlFM0030, then run:
+Extract the archive for the selected model size:
+
+```bash
+python -m zipfile -e SVDKL-0.01M.zip .
+```
+
+For SVDKL-0.01M and SlFM0030, the weight path is `weights/SVDKL-0.01M/SlFM0030.pt`. Predict using the fixed reference dataset:
 
 ```bash
 python -m src.predict --checkpoint weights/SVDKL-0.01M/SlFM0030.pt --data data/dataset_inputs.npz --model SVDKL-0.01M --trait SlFM0030 --device cpu --output predictions_SlFM0030.csv
