@@ -1,6 +1,8 @@
 # SVDKL for tomato metabolite prediction
 
-SVDKL predicts tomato metabolite levels from genomic structural variants using deep kernel learning. It combines a relationship kernel across deletion variants with a Transformer-weighted kernel built from 500 variants selected within the training data. Gaussian process regression combines these kernels to predict 36 metabolite traits. The repository provides data preparation, model training, prediction, and evaluation code, together with three pretrained model sizes. A Google Colab notebook lets users select a model and metabolite, load input data, and view predictions alongside measured values. Users can inspect results as tables and plots and download them for further analysis. Command-line interfaces also support local execution and prediction for new samples.
+SVDKL predicts tomato metabolite levels from structural variant genotypes using deep kernel learning. It combines genetic similarity across deletion variants with a Transformer-weighted kernel of selected variants. Explore predictions for 36 metabolite traits in Colab, or use the Python code locally to train models and predict new samples.
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23669233.svg)](https://doi.org/10.5281/zenodo.23669233)
 
 ![SVDKL framework](assets/fig1.jpg)
 
@@ -130,3 +132,8 @@ Query markers are aligned by ID.
 SVDKL combines a relationship kernel across all training-QC deletion variants with a Transformer-weighted kernel built from 500 variants selected within training. Gaussian process regression combines the two kernels to predict metabolite traits. Quality control (QC) retains variable deletions with minor-allele frequency > 0.05 and missingness < 0.20. Imputation, variant selection and phenotype scaling use training data.
 
 The Transformer uses 19-dimensional variant descriptors and a two-layer weight head. Training minimizes the Gaussian process marginal negative log-likelihood.
+
+## Contact
+
+- Mingyu Bian: [bianmingyu@stu.xju.edu.cn](mailto:bianmingyu@stu.xju.edu.cn)
+- Yiquan Wang: [ethan@stu.xju.edu.cn](mailto:ethan@stu.xju.edu.cn)
