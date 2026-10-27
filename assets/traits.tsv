@@ -1,0 +1,37 @@
+trait_id	metabolite_name	class	identification_level
+SlFM0030	Cysteine	Amino acid	putatively annotated
+SlFM0047	L-Isoleucine	Amino acid	standard
+SlFM0048	Ornithine	Amino acid	putatively annotated
+SlFM0069	Salicylic acid	Polyphenol	putatively annotated
+SlFM0216	Methoxy indoleacetic acid	Phytohormone	putatively annotated
+SlFM0222	Chalcone	Flavonoid	putatively annotated
+SlFM0244	Acetyl-serotonin	Amino acid derivative	putatively annotated
+SlFM0259	2'-Deoxycytidine	Nucleic acid derivative	putatively annotated
+SlFM0275	L-Homocarnosine	Amino acid	putatively annotated
+SlFM0336	ABA	Phytohormone	putatively annotated
+SlFM0346	Homocystine	Amino acid derivative	standard
+SlFM0386	N-(9H-Purin-6-ylcarbamoyl)threonine	Nucleic acid derivative	putatively annotated
+SlFM0416	IAA-Asp	Phytohormone	putatively annotated
+SlFM0421	Catechin	Flavonoid	standard
+SlFM0430	N-Sinapoylputrescine	Polyamine	putatively annotated
+SlFM0438	2'-O-methylguanosine	Nucleic acid derivative	putatively annotated
+SlFM0502	N-Feruloyltyramine	Amino acid derivative	putatively annotated
+SlFM0533	p-Coumaric acid 4-O-hexoside	Polyphenol	putatively annotated
+SlFM0555	GA7-1	Phytohormone	putatively annotated
+SlFM0577	4-Coumaroylquinic acid	Polyphenol	putatively annotated
+SlFM0625	Adenosine 3'-monophosphate	Nucleic acid derivative	standard
+SlFM0716	Sinapaldehyde glucoside	Polyphenol	putatively annotated
+SlFM0778	S-Adenosyl-L-homocysteine	Amino acid derivative	putatively annotated
+SlFM0982	Naringenin C-hexoside	Flavonoid	putatively annotated
+SlFM1384	Quercetin O-malonylhexoside	Flavonoid	putatively annotated
+SlFM1470	Cyanidin 3-rutinoside	Anthocyanin	putatively annotated
+SlFM1542	Petunidin 3-O-rutinoside	Anthocyanin	putatively annotated
+SlFM1553	N', N'', N'''-Di-p-coumaroyl, sinapoylagmatine	Polyamine	putatively annotated
+SlFM1619	N', N'', N'''-Diferuloyl, caffeoylspermidine	Polyamine	putatively annotated
+SlFM1621	N', N'', N'''-p-hydroxybenxoyl,caffeoyl, feruloylagmatine	Polyamine	putatively annotated
+SlFM1804	Dihydroxy tomatidine-O-hexosyl-O-rhamnoside	Glycoalkaloid	putatively annotated
+SlFM1826	Delphinidin 3-sophoroside-5-rhamnoside	Anthocyanin	putatively annotated
+SlFM1952	Ferulylpelargonidin di-O-hexosyl-O-pentoside	Anthocyanin	putatively annotated
+SlFM1980	Habrochaitoside A	Glycoalkaloid	putatively annotated
+SlFM1984	Lycoperoside H	Glycoalkaloid	putatively annotated
+SlFM1988	Lycoperoside C	Glycoalkaloid	putatively annotated
