@@ -2,11 +2,9 @@
 
 SVDKL predicts tomato metabolite levels from structural variant genotypes using deep kernel learning. It combines genetic similarity across deletion variants with a Transformer-weighted kernel of selected variants. Explore predictions for 36 metabolite traits in Colab, or use the Python code locally to train models and predict new samples.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23669233.svg)](https://doi.org/10.5281/zenodo.23669233)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23669233.svg)](https://doi.org/10.5281/zenodo.23669233) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wyqmath/SVDKL/blob/main/notebooks/SVDKL_quickstart.ipynb)
 
 ![SVDKL framework](assets/fig1.jpg)
-
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wyqmath/SVDKL/blob/main/notebooks/SVDKL_quickstart.ipynb)
 
 ## Repository structure
 
