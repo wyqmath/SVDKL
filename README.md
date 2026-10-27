@@ -1,34 +1,20 @@
-# SVDKL for tomato metabolite prediction from structural variants
+# Deep kernel learning predicts complex traits and prioritizes candidate loci from pangenome structural variation in tomato
 
 SVDKL predicts tomato metabolite levels from genomic structural variant genotypes. This repository provides code to prepare data, train models, and generate predictions for 36 metabolite traits. Start with the Colab example to run prediction and save a prediction table and plot. Prediction runs on a CPU; GPU training is optional.
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wyqmath/SVDKL/blob/main/notebooks/SVDKL_quickstart.ipynb)
 
-## Quick start in Colab
-
-| Step | What to do | What you get |
-|---|---|---|
-| 1. Open Colab | Open the notebook above and run the setup cell to install dependencies. | A ready-to-use runtime. |
-| 2. Load model | Choose a model size, starting with **SVDKL-0.01M**, and run the model cell. | Model ready, with the selected model name. Parameters for another trait load automatically when needed. |
-| 3. Load input data | Run Input data to load the example input; if missing, click **Prepare example data** to create it from the original sources. | Input data checked and ready for prediction. |
-| 4. Run prediction | Start with **SlFM0030 — Cysteine** and run the prediction cell. | The results table, plot and test-set metrics appear immediately. |
-| 5. Download results | Click **Download predictions** or **Download figure** beneath the results. | A saved copy of the results table or figure. |
-
-The results table includes training/test roles, observed values, predictions and residuals (prediction errors). The comparison plot and prediction metrics use the 65 test accessions. The plot labels the model, metabolite and test sample count, with Pearson correlation and RMSE alongside it. Download buttons appear immediately. If plotting fails, the CSV is preserved and **Retry figure** redraws it without running prediction again. Saved CSV results can also be redrawn in a new session after setup.
-
-Pretrained model weights are not yet available for download. The pretrained prediction example requires these files. For now, use a model already available in your session. Training and test evaluation are optional sections after the main prediction workflow. Preparation from the original source files is in the notebook’s optional data section; step 3 loads prepared input available in the session.
-
 ![SVDKL framework](assets/fig1.jpg)
 
 ## Model sizes
 
-| Model size | Paper label | Width / layers | Parameters | Model download |
+| Model size | Paper label | Width / layers | Parameters | Pretrained weights |
 |---|---|---|---:|---|
-| SVDKL-0.01M | SVDKL-0.01M | 32 / 1 | 9,731 | Not yet public |
-| SVDKL-4.35M | SVDKL-4M | 512 / 2 | 4,347,395 | Not yet public |
-| SVDKL-46.46M | SVDKL-46M | 1,376 / 3 | 46,462,019 | Not yet public |
+| SVDKL-0.01M | SVDKL-0.01M | 32 / 1 | 9,731 | [SVDKL-0.01M.zip](https://zenodo.org/api/records/23669233/files/SVDKL-0.01M.zip/content) |
+| SVDKL-4.35M | SVDKL-4M | 512 / 2 | 4,347,395 | [SVDKL-4.35M.zip](https://zenodo.org/api/records/23669233/files/SVDKL-4.35M.zip/content) |
+| SVDKL-46.46M | SVDKL-46M | 1,376 / 3 | 46,462,019 | [SVDKL-46.46M.zip](https://zenodo.org/api/records/23669233/files/SVDKL-46.46M.zip/content) |
 
-Pretrained model weights are not yet available for download. When they are published, Colab downloads, unpacks and loads the selected model automatically. A model already available in the session can be loaded under **Advanced**.
+Pretrained model weights are available on [Zenodo](https://zenodo.org/records/23669233) ([DOI: 10.5281/zenodo.23669233](https://doi.org/10.5281/zenodo.23669233)). Each download contains the 36 trait models for one model size. In Colab, selecting a model downloads, unpacks and loads it automatically. Start with **SVDKL-0.01M**. Locally, the extracted weights are at `weights/<model>/<trait>.pt`.
 
 The Transformer is the neural component that learns variant weights. Width is its internal feature dimension; layers is the number of encoder blocks. Both determine model size. Each model size supports the same 36 metabolite traits, using a separately trained model for each trait.
 
@@ -47,52 +33,57 @@ The example uses a fixed split of 259 training accessions and 65 test accessions
 | Metabolite annotations | Zhu et al. (2018), [Cell](https://doi.org/10.1016/j.cell.2017.12.019) | [mmc2.xls](https://ars.els-cdn.com/content/image/1-s2.0-S009286741731499X-mmc2.xls) |
 | Measurement identities | Zhu et al. (2018), [Cell](https://doi.org/10.1016/j.cell.2017.12.019) | [mmc5.xlsx](https://ars.els-cdn.com/content/image/1-s2.0-S009286741731499X-mmc5.xlsx) |
 
-Numerical preparation reads the population VCF and integrated phenotype table; the Cell workbooks identify the metabolites. Inputs retain all 106,362 original deletion (DEL) columns in VCF order. Each genotype is encoded as 0, 1 or 2 copies of the alternate deletion allele, with −1 for missing or unsupported calls. Coordinates use SL5.0 and 1-based VCF positions; variant length is `max(REF length − ALT length, 1)`. Phenotypes retain the numerical values of the integrated source table. Training standardization is reversed before prediction is returned, so measured and predicted values share this source-table scale.
+Numerical preparation reads the population VCF and integrated phenotype table; the Cell workbooks identify the metabolites. Inputs retain all 106,362 original deletion (DEL) columns in VCF order. Each genotype is encoded as 0, 1 or 2 copies of the alternate deletion allele, with −1 for missing or unsupported calls. Coordinates use SL5.0 and 1-based VCF positions; variant length is `max(REF length − ALT length, 1)`. Phenotype values and predictions use the processed scale of `pheno_exp_meta.txt`; no concentration unit is specified.
 
 The panel contains four metabolites from each of the nine classes listed below. Preparation uses these 36 trait IDs in ascending alphanumeric order.
 
-### Trait IDs and metabolite names
+<a id="trait-ids-and-metabolite-names"></a>
 
-Trait IDs such as `SlFM0030` identify the phenotype columns used for prediction. The names, classes and identification levels below follow the Cell annotation workbook linked above. “Putatively annotated” retains the original annotation confidence. **Source-table measurement** means the processed measurement value in the matching `pheno_exp_meta.txt` column. Predictions are returned on the same scale. Concentration units and upstream transformations are not specified in those columns.
+<details>
+<summary>Trait IDs and metabolite names</summary>
 
-| Trait ID | Metabolite name | Class | Identification level | Phenotype value meaning |
-|---|---|---|---|---|
-| SlFM0030 | Cysteine | Amino acid | putatively annotated | Source-table measurement |
-| SlFM0047 | L-Isoleucine | Amino acid | standard | Source-table measurement |
-| SlFM0048 | Ornithine | Amino acid | putatively annotated | Source-table measurement |
-| SlFM0069 | Salicylic acid | Polyphenol | putatively annotated | Source-table measurement |
-| SlFM0216 | Methoxy indoleacetic acid | Phytohormone | putatively annotated | Source-table measurement |
-| SlFM0222 | Chalcone | Flavonoid | putatively annotated | Source-table measurement |
-| SlFM0244 | Acetyl-serotonin | Amino acid derivative | putatively annotated | Source-table measurement |
-| SlFM0259 | 2'-Deoxycytidine | Nucleic acid derivative | putatively annotated | Source-table measurement |
-| SlFM0275 | L-Homocarnosine | Amino acid | putatively annotated | Source-table measurement |
-| SlFM0336 | ABA | Phytohormone | putatively annotated | Source-table measurement |
-| SlFM0346 | Homocystine | Amino acid derivative | standard | Source-table measurement |
-| SlFM0386 | N-(9H-Purin-6-ylcarbamoyl)threonine | Nucleic acid derivative | putatively annotated | Source-table measurement |
-| SlFM0416 | IAA-Asp | Phytohormone | putatively annotated | Source-table measurement |
-| SlFM0421 | Catechin | Flavonoid | standard | Source-table measurement |
-| SlFM0430 | N-Sinapoylputrescine | Polyamine | putatively annotated | Source-table measurement |
-| SlFM0438 | 2'-O-methylguanosine | Nucleic acid derivative | putatively annotated | Source-table measurement |
-| SlFM0502 | N-Feruloyltyramine | Amino acid derivative | putatively annotated | Source-table measurement |
-| SlFM0533 | p-Coumaric acid 4-O-hexoside | Polyphenol | putatively annotated | Source-table measurement |
-| SlFM0555 | GA7-1 | Phytohormone | putatively annotated | Source-table measurement |
-| SlFM0577 | 4-Coumaroylquinic acid | Polyphenol | putatively annotated | Source-table measurement |
-| SlFM0625 | Adenosine 3'-monophosphate | Nucleic acid derivative | standard | Source-table measurement |
-| SlFM0716 | Sinapaldehyde glucoside | Polyphenol | putatively annotated | Source-table measurement |
-| SlFM0778 | S-Adenosyl-L-homocysteine | Amino acid derivative | putatively annotated | Source-table measurement |
-| SlFM0982 | Naringenin C-hexoside | Flavonoid | putatively annotated | Source-table measurement |
-| SlFM1384 | Quercetin O-malonylhexoside | Flavonoid | putatively annotated | Source-table measurement |
-| SlFM1470 | Cyanidin 3-rutinoside | Anthocyanin | putatively annotated | Source-table measurement |
-| SlFM1542 | Petunidin 3-O-rutinoside | Anthocyanin | putatively annotated | Source-table measurement |
-| SlFM1553 | N', N'', N'''-Di-p-coumaroyl, sinapoylagmatine | Polyamine | putatively annotated | Source-table measurement |
-| SlFM1619 | N', N'', N'''-Diferuloyl, caffeoylspermidine | Polyamine | putatively annotated | Source-table measurement |
-| SlFM1621 | N', N'', N'''-p-hydroxybenxoyl,caffeoyl, feruloylagmatine | Polyamine | putatively annotated | Source-table measurement |
-| SlFM1804 | Dihydroxy tomatidine-O-hexosyl-O-rhamnoside | Glycoalkaloid | putatively annotated | Source-table measurement |
-| SlFM1826 | Delphinidin 3-sophoroside-5-rhamnoside | Anthocyanin | putatively annotated | Source-table measurement |
-| SlFM1952 | Ferulylpelargonidin di-O-hexosyl-O-pentoside | Anthocyanin | putatively annotated | Source-table measurement |
-| SlFM1980 | Habrochaitoside A | Glycoalkaloid | putatively annotated | Source-table measurement |
-| SlFM1984 | Lycoperoside H | Glycoalkaloid | putatively annotated | Source-table measurement |
-| SlFM1988 | Lycoperoside C | Glycoalkaloid | putatively annotated | Source-table measurement |
+Trait IDs such as `SlFM0030` identify the phenotype columns used for prediction. The names, classes and identification levels below follow the Cell annotation workbook linked above. “Putatively annotated” retains the original annotation confidence.
+
+| Trait ID | Metabolite name | Class | Identification level |
+|---|---|---|---|
+| SlFM0030 | Cysteine | Amino acid | putatively annotated |
+| SlFM0047 | L-Isoleucine | Amino acid | standard |
+| SlFM0048 | Ornithine | Amino acid | putatively annotated |
+| SlFM0069 | Salicylic acid | Polyphenol | putatively annotated |
+| SlFM0216 | Methoxy indoleacetic acid | Phytohormone | putatively annotated |
+| SlFM0222 | Chalcone | Flavonoid | putatively annotated |
+| SlFM0244 | Acetyl-serotonin | Amino acid derivative | putatively annotated |
+| SlFM0259 | 2'-Deoxycytidine | Nucleic acid derivative | putatively annotated |
+| SlFM0275 | L-Homocarnosine | Amino acid | putatively annotated |
+| SlFM0336 | ABA | Phytohormone | putatively annotated |
+| SlFM0346 | Homocystine | Amino acid derivative | standard |
+| SlFM0386 | N-(9H-Purin-6-ylcarbamoyl)threonine | Nucleic acid derivative | putatively annotated |
+| SlFM0416 | IAA-Asp | Phytohormone | putatively annotated |
+| SlFM0421 | Catechin | Flavonoid | standard |
+| SlFM0430 | N-Sinapoylputrescine | Polyamine | putatively annotated |
+| SlFM0438 | 2'-O-methylguanosine | Nucleic acid derivative | putatively annotated |
+| SlFM0502 | N-Feruloyltyramine | Amino acid derivative | putatively annotated |
+| SlFM0533 | p-Coumaric acid 4-O-hexoside | Polyphenol | putatively annotated |
+| SlFM0555 | GA7-1 | Phytohormone | putatively annotated |
+| SlFM0577 | 4-Coumaroylquinic acid | Polyphenol | putatively annotated |
+| SlFM0625 | Adenosine 3'-monophosphate | Nucleic acid derivative | standard |
+| SlFM0716 | Sinapaldehyde glucoside | Polyphenol | putatively annotated |
+| SlFM0778 | S-Adenosyl-L-homocysteine | Amino acid derivative | putatively annotated |
+| SlFM0982 | Naringenin C-hexoside | Flavonoid | putatively annotated |
+| SlFM1384 | Quercetin O-malonylhexoside | Flavonoid | putatively annotated |
+| SlFM1470 | Cyanidin 3-rutinoside | Anthocyanin | putatively annotated |
+| SlFM1542 | Petunidin 3-O-rutinoside | Anthocyanin | putatively annotated |
+| SlFM1553 | N', N'', N'''-Di-p-coumaroyl, sinapoylagmatine | Polyamine | putatively annotated |
+| SlFM1619 | N', N'', N'''-Diferuloyl, caffeoylspermidine | Polyamine | putatively annotated |
+| SlFM1621 | N', N'', N'''-p-hydroxybenxoyl,caffeoyl, feruloylagmatine | Polyamine | putatively annotated |
+| SlFM1804 | Dihydroxy tomatidine-O-hexosyl-O-rhamnoside | Glycoalkaloid | putatively annotated |
+| SlFM1826 | Delphinidin 3-sophoroside-5-rhamnoside | Anthocyanin | putatively annotated |
+| SlFM1952 | Ferulylpelargonidin di-O-hexosyl-O-pentoside | Anthocyanin | putatively annotated |
+| SlFM1980 | Habrochaitoside A | Glycoalkaloid | putatively annotated |
+| SlFM1984 | Lycoperoside H | Glycoalkaloid | putatively annotated |
+| SlFM1988 | Lycoperoside C | Glycoalkaloid | putatively annotated |
+
+</details>
 
 ### Sample inclusion
 
@@ -123,7 +114,13 @@ python -m src.prepare_data --vcf data/706.sv.vcf.gz --phenotypes data/pheno_exp_
 
 ### 2. Load a model and predict
 
-Place the model for the selected model size and trait at `weights/<model size>/<trait ID>.pt`. For example, use `weights/SVDKL-0.01M/SlFM0030.pt` for SVDKL-0.01M and SlFM0030, then run:
+Extract the archive for the selected model size:
+
+```bash
+python -m zipfile -e SVDKL-0.01M.zip .
+```
+
+For SVDKL-0.01M and SlFM0030, the weight path is `weights/SVDKL-0.01M/SlFM0030.pt`. Predict using the fixed reference dataset:
 
 ```bash
 python -m src.predict --checkpoint weights/SVDKL-0.01M/SlFM0030.pt --data data/dataset_inputs.npz --model SVDKL-0.01M --trait SlFM0030 --device cpu --output predictions_SlFM0030.csv
