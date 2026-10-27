@@ -1,6 +1,8 @@
 # SVDKL for tomato metabolite prediction
 
-SVDKL predicts 36 tomato metabolite traits from structural variant genotypes using deep kernel learning.
+SVDKL predicts tomato metabolite levels from genomic structural variants using deep kernel learning. It combines a relationship kernel across deletion variants with a Transformer-weighted kernel built from 500 variants selected within the training data. Gaussian process regression combines these kernels to predict 36 metabolite traits. The repository provides data preparation, model training, prediction, and evaluation code, together with three pretrained model sizes. A Google Colab notebook lets users select a model and metabolite, load input data, and view predictions alongside measured values. Users can inspect results as tables and plots and download them for further analysis. Command-line interfaces also support local execution and prediction for new samples.
+
+![SVDKL framework](assets/fig1.jpg)
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wyqmath/SVDKL/blob/main/notebooks/SVDKL_quickstart.ipynb)
 
@@ -23,7 +25,7 @@ SVDKL/
 
 ## Model sizes
 
-Three model sizes are available, each supporting the same 36 metabolite traits.
+Three model sizes are available on [Zenodo](https://zenodo.org/records/23669233), each supporting the same 36 metabolite traits.
 
 | Model | Parameters | Download |
 |---|---:|---|
@@ -128,5 +130,3 @@ Query markers are aligned by ID.
 SVDKL combines a relationship kernel across all training-QC deletion variants with a Transformer-weighted kernel built from 500 variants selected within training. Gaussian process regression combines the two kernels to predict metabolite traits. Quality control (QC) retains variable deletions with minor-allele frequency > 0.05 and missingness < 0.20. Imputation, variant selection and phenotype scaling use training data.
 
 The Transformer uses 19-dimensional variant descriptors and a two-layer weight head. Training minimizes the Gaussian process marginal negative log-likelihood.
-
-![SVDKL framework](assets/fig1.jpg)
